@@ -143,37 +143,11 @@ export class HistoricalObject<T extends Record<string, number>> {
     this.data = data;
   }
 
-  trimBefore(newStart: number) {
-    const newHistory = {} as Record<string, History>;
-    for (const [field, history] of Object.entries(this.history)) {
-      while (history.samples.length > 0 && history.samples[0].time < newStart) {
-        const { value } = history.samples.shift()!;
-        history.initialValue = value;
-      }
-      if (history.samples.length > 0) {
-        newHistory[field] = history;
-      }
-    }
-    this.history = newHistory;
-  }
-
   pack(): ArrayBuffer | null {
     if (this.historyLength() === 0) {
       return null;
     }
     return packSampleRecord(this.fieldConfig, this.history);
-  }
-
-  static unpack<T extends Record<string, number>>(
-    config: FieldConfig,
-    buffer: ArrayBuffer | null,
-    latestValue: T
-  ): HistoricalObject<T> {
-    const result = new HistoricalObject(config, latestValue);
-    if (buffer) {
-      result.history = unpackSampleRecord(config, buffer);
-    }
-    return result;
   }
 }
 

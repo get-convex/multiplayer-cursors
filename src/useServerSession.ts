@@ -12,7 +12,7 @@
  *
  * With the `SessionProvider` inside the `ConvexProvider` but outside your app.
  */
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import { FunctionReference, OptionalRestArgs } from "convex/server";
 import { api } from "../convex/_generated/api";
@@ -50,15 +50,25 @@ export const SessionProvider: React.FC<{
   const createSession = useMutation(api.sessions.create);
 
   // Get or set the ID from our desired storage location, whenever it changes.
+  const inProgress = useRef(false);
   useEffect(() => {
     if (sessionId) {
       store?.setItem(StoreKey, sessionId);
     } else {
-      void (async () => {
-        setSession(await createSession());
-      })();
+      const create = async () => {
+        if (inProgress.current) {
+          return;
+        }
+        inProgress.current = true;
+        try {
+          setSession(await createSession());
+        } finally {
+          inProgress.current = false;
+        }
+      };
+      void create();
     }
-  }, [sessionId, createSession, store]);
+  }, [sessionId, createSession, store, inProgress]);
 
   return React.createElement(
     SessionContext.Provider,

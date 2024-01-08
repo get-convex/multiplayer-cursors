@@ -6,13 +6,15 @@ export default defineSchema({
   // TODO: Add metadata.
   positions: defineTable({
     versionNumber: v.number(),
-    current: position,
+    current: v.optional(position),
+    serverTime,
 
-    history: v.object({
-      start: serverTime,
-      end: serverTime,
-      buffer: v.union(v.bytes(), v.null()),
-    }),
+    history: v.optional(
+      v.object({
+        start: serverTime,
+        buffer: v.bytes(),
+      })
+    ),
   }),
 
   sessions: defineTable({
@@ -21,6 +23,6 @@ export default defineSchema({
       default: v.string(),
       dim: v.string(),
     }),
-    positionId: v.optional(v.id("positions")),
+    positionId: v.id("positions"),
   }),
 });

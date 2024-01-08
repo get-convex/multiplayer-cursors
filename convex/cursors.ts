@@ -3,6 +3,7 @@ import { cursorFields } from "./constants";
 import { HistoricalObject } from "./lib/historicalObject";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { batchTime, position } from "./types";
+import { query } from "./_generated/server";
 
 export const cursorStyle = queryWithSession({
   args: {},
@@ -36,39 +37,56 @@ export const applyOperations = mutationWithSession({
     if (!position) {
       throw new Error("Position not found");
     }
-    const lastEnd = position.history.end;
 
     const now = Date.now();
-    const start = Math.max(now - args.batchDuration, position.history.end);
+    const startLowerBound = now - args.batchDuration;
+    const start = position.history
+      ? Math.max(startLowerBound, position.serverTime)
+      : startLowerBound;
     const end = Math.min(start + args.batchDuration, now);
     const batchScaling = (end - start) / args.batchDuration;
 
-    const history = HistoricalObject.unpack(
-      cursorFields,
-      position.history.buffer,
-      position.current
-    );
+    const current = position.current ?? { x: 0, y: 0 };
+    const history = new HistoricalObject(cursorFields, current);
 
     let versionNumber = position.versionNumber;
     for (const operation of args.operations) {
-      if (operation.versionNumber < versionNumber) {
-        throw new Error(
-          `Version numbers out of order: ${operation.versionNumber} < ${versionNumber}`
-        );
-      }
+      // TODO: Use version numbers when we want to implement optimistic updates.
+      // if (operation.versionNumber < versionNumber) {
+      //   throw new Error(
+      //     `Version numbers out of order: ${operation.versionNumber} < ${versionNumber}`
+      //   );
+      // }
       versionNumber = operation.versionNumber;
       const serverTime = start + batchScaling * operation.batchTime;
       history.update(serverTime, operation.newPosition);
     }
-    history.trimBefore(start);
+    const buffer = history.pack() ?? undefined;
+    buffer &&
+      console.log(
+        `Flushing ${args.operations.length} ops in ${(
+          buffer.byteLength / 1024
+        ).toFixed(2)}KiB`
+      );
     await ctx.db.replace(positionId, {
       versionNumber,
       current: history.data,
-      history: {
+      serverTime: end,
+      history: buffer && {
         start,
-        end,
-        buffer: history.pack(),
+        buffer,
       },
     });
+  },
+});
+
+export const loadPosition = query({
+  args: { positionId: v.id("positions") },
+  handler: async (ctx, args) => {
+    const position = await ctx.db.get(args.positionId);
+    if (!position) {
+      throw new Error("Position not found");
+    }
+    return position;
   },
 });

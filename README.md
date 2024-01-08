@@ -17,5 +17,5 @@ The implementation has the following properties (I think...):
 
 ## Demo
 
-https://github.com/get-convex/multiplayer-cursors/assets/5784949/8e12d803-c1f0-4748-a292-680b2bbe2670
+https://github.com/get-convex/multiplayer-cursors/assets/5784949/135932d0-c46b-4126-bed9-9b1d601143ca
 

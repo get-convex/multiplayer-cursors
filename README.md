@@ -15,6 +15,8 @@ The implementation has the following properties (I think...):
 - [ ] Don't replay recent history on initial load.
 - [ ] Improve the React API: Ian had some great ideas on making it really simple to drop this in.
 - [ ] Make the demo UI a lot prettier.
+  - [ ] The coordinate spaces are all off for the mouse event -> `position: absolute` div
+  - [ ] There's also a fixed, arbitrary z-order. We should sort the player's cursor above everyone else's.
 
 ## Demo
 

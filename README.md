@@ -12,6 +12,7 @@ The implementation has the following properties (I think...):
 - [ ] Add optimistic updates. Right now we just special case the player's cursor to always move it to the latest local value.
 - [ ] Add metadata to the positions which can be used server-side for deciding if a move is valid. For example, this lets the developer express that someone is dragging a particular UI element and ban anyone else from moving it.
 - [ ] Time out inactive cursors.
+- [ ] Don't replay recent history on initial load.
 - [ ] Improve the React API: Ian had some great ideas on making it really simple to drop this in.
 - [ ] Make the demo UI a lot prettier.
 

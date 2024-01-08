@@ -1,5 +1,3 @@
-import { CURSOR_SIZE } from "./constants";
-
 export function Cursor(props: {
   cursorStyle: { color: { default: string; dim: string }; fruit: string };
   x: number;
@@ -11,8 +9,8 @@ export function Cursor(props: {
       style={{
         left: props.x,
         top: props.y,
-        width: CURSOR_SIZE,
-        height: CURSOR_SIZE,
+        width: 52,
+        height: 52,
         position: "absolute",
         fontSize: 28,
         userSelect: "none",

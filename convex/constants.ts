@@ -1,10 +1,3 @@
-import { FieldConfig } from "./lib/historicalObject";
-
-export const cursorFields: FieldConfig = [
-  { name: "x", precision: 8 },
-  { name: "y", precision: 8 },
-];
-
 // Taken from https://variable.app/p/WDBzmhnJcw2FiKw3lW5r
 export const COLORS = {
   red: { default: "#FF3366", dim: "#501D2A" },

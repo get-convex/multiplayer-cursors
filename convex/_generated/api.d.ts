@@ -19,6 +19,7 @@ import type * as cursors from "../cursors.js";
 import type * as lib_FastIntegerCompression from "../lib/FastIntegerCompression.js";
 import type * as lib_compression from "../lib/compression.js";
 import type * as lib_historicalObject from "../lib/historicalObject.js";
+import type * as lib_positionTracking from "../lib/positionTracking.js";
 import type * as lib_sessions from "../lib/sessions.js";
 import type * as lib_xxhash from "../lib/xxhash.js";
 import type * as sessions from "../sessions.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   "lib/FastIntegerCompression": typeof lib_FastIntegerCompression;
   "lib/compression": typeof lib_compression;
   "lib/historicalObject": typeof lib_historicalObject;
+  "lib/positionTracking": typeof lib_positionTracking;
   "lib/sessions": typeof lib_sessions;
   "lib/xxhash": typeof lib_xxhash;
   sessions: typeof sessions;

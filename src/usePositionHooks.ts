@@ -116,10 +116,10 @@ export function makePositionHooks<
   };
   // TODO: make this configurable
   function usePositionTracking(
-    initialPositionId: GenericId<TableName> | undefined,
-    onUpdatePositionId?: (id: GenericId<TableName>) => any
+    positionId: GenericId<TableName> | undefined
+    // onUpdatePositionId?: (id: GenericId<TableName>) => any
   ) {
-    const [positionId, setPositionId] = useState(initialPositionId);
+    // const [positionId, setPositionId] = useState(initialPositionId);
     const [currentPosition, setCurrentPosition] = useState<{
       x: number;
       y: number;
@@ -166,10 +166,10 @@ export function makePositionHooks<
           operations,
           positionId,
         }).then((newPositionId) => {
-          if (positionId !== newPositionId) {
-            setPositionId(newPositionId);
-            onUpdatePositionId && onUpdatePositionId(newPositionId);
-          }
+          // if (positionId !== newPositionId) {
+          //   setPositionId(newPositionId);
+          //   onUpdatePositionId && onUpdatePositionId(newPositionId);
+          // }
         });
       };
       const interval = setInterval(flush, FLUSH_FREQUENCY);

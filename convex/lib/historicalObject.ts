@@ -382,3 +382,7 @@ function normalizeFieldConfig(fields: FieldConfig): NormalizedFieldConfig {
     typeof f === "string" ? { name: f, precision: 0 } : f
   );
 }
+export const cursorFields: FieldConfig = [
+  { name: "x", precision: 8 },
+  { name: "y", precision: 8 },
+];

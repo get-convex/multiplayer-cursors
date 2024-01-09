@@ -1,6 +1,6 @@
 import { mutation } from "./_generated/server";
 import { FRUITS } from "./constants";
-import { queryWithSession } from "./lib/withSession";
+import { queryWithSession } from "./lib/sessions";
 
 /**
  * Creates a session and returns the id. For use with the SessionProvider on the

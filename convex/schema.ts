@@ -20,6 +20,7 @@ export default defineSchema({
     positionId: v.id("positions"),
     sessionId: v.id("sessions"),
     zone: v.string(),
+    // Could/should be stored elsewhere?
     fruit: v.string(),
     color: v.object({
       default: v.string(),

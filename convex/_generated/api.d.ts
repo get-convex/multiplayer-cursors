@@ -14,11 +14,10 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as app from "../app.js";
 import type * as constants from "../constants.js";
-import type * as cursors from "../cursors.js";
 import type * as lib_FastIntegerCompression from "../lib/FastIntegerCompression.js";
 import type * as lib_compression from "../lib/compression.js";
+import type * as lib_cursors from "../lib/cursors.js";
 import type * as lib_historicalObject from "../lib/historicalObject.js";
 import type * as lib_positionTracking from "../lib/positionTracking.js";
 import type * as lib_sessions from "../lib/sessions.js";
@@ -34,11 +33,10 @@ import type * as types from "../types.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  app: typeof app;
   constants: typeof constants;
-  cursors: typeof cursors;
   "lib/FastIntegerCompression": typeof lib_FastIntegerCompression;
   "lib/compression": typeof lib_compression;
+  "lib/cursors": typeof lib_cursors;
   "lib/historicalObject": typeof lib_historicalObject;
   "lib/positionTracking": typeof lib_positionTracking;
   "lib/sessions": typeof lib_sessions;

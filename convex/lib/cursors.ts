@@ -1,10 +1,37 @@
 import { v } from "convex/values";
-import { query } from "./_generated/server";
-import { FRUITS } from "./constants";
-import { mutationWithSession, queryWithSession } from "./lib/sessions";
-import { createEmptyPosition } from "./cursors";
+import { query } from "../_generated/server";
+import { FRUITS } from "../constants";
+import { makePositionTrackingServerFunctions } from "./positionTracking";
+import { mutationWithSession } from "./sessions";
+import {
+  GenericDataModel,
+  GenericMutationCtx,
+  GenericQueryCtx,
+  MutationBuilder,
+  RegisteredMutation,
+  TableNamesInDataModel,
+  ValidatedFunction,
+} from "convex/server";
+import { customMutation } from "convex-helpers/server/customFunctions";
 
-// Does filtering client side so we can get better cache performance.
+export function makeCursorServerFunctions<
+  DataModel extends GenericDataModel,
+  TableName extends TableNamesInDataModel<DataModel>,
+  Ctx extends GenericMutationCtx<DataModel>,
+  Id extends string
+>(
+  customMutation: (
+    func: ValidatedFunction<Ctx, any, any>
+  ) => RegisteredMutation<"public", any, any>,
+  lookupId: (ctx: Ctx) => Id | Promise<Id>,
+  getMetadata: (ctx: GenericQueryCtx<DataModel>, id: Id) => {} | Promise<{}>,
+  tableName: TableName
+) {
+  // TODO
+}
+export const { createEmptyPosition, submitPositionBatch, loadPosition } =
+  makePositionTrackingServerFunctions("positions"); // Does filtering client side so we can get better cache performance.
+
 export const listCursors = query({
   args: { zone: v.string() },
   handler: async (ctx, args) => {

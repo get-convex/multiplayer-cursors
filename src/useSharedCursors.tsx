@@ -6,8 +6,8 @@ import { useQuery } from "convex/react";
 import { Knobs, makePositionHooks } from "./usePositionHooks";
 
 export const { usePositionReplay, usePositionTracking } = makePositionHooks(
-  api.cursors.loadPosition,
-  api.cursors.submitPositionBatch,
+  api.lib.cursors.loadPosition,
+  api.lib.cursors.submitPositionBatch,
   "positions"
 );
 
@@ -20,7 +20,7 @@ export const SharedCursorProvider: React.FC<{
   zone: string;
   children?: React.ReactNode;
 }> = ({ zone, children }) => {
-  const upsertCursor = useSessionMutation(api.app.upsertCursor);
+  const upsertCursor = useSessionMutation(api.lib.cursors.upsertCursor);
   const [cursor, setCursor] = React.useState<Doc<"cursors"> | undefined>();
   useEffect(() => {
     if (cursor === undefined) {
@@ -50,7 +50,7 @@ export function useSharedCursors(
     throw new Error("useSharedCursor must be used within a SessionProvider");
   }
   const { zone, cursor } = context;
-  const cursors = useQuery(api.app.listCursors, { zone });
+  const cursors = useQuery(api.lib.cursors.listCursors, { zone });
   const mine = cursors?.find((c) => c._id === cursor?._id);
   const others = cursors?.filter((c) => c._id !== cursor?._id);
   const { onMove, currentPosition } = usePositionTracking(

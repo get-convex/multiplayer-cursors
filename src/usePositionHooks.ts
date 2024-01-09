@@ -1,76 +1,187 @@
-import { Cursor } from "./Cursor";
-import { Doc, Id } from "../convex/_generated/dataModel";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
+import {
+  MouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useMutation, useQuery } from "convex/react";
 import {
   FieldConfig,
   unpackSampleRecord,
   History,
+  cursorFields,
 } from "../convex/lib/historicalObject";
-import { cursorFields } from "../convex/constants";
-
-export function HistoricalCursor(props: {
-  cursorStyle: { color: { default: string; dim: string }; fruit: string };
-  positionId: Id<"positions">;
-  knobs: Knobs;
-}) {
-  const position = useQuery(api.cursors.loadPosition, {
-    positionId: props.positionId,
-  });
-  const { historicalTime, timeManager } = useHistoricalTime(
-    props.knobs,
-    position
-  );
-  const historicalPosition = useHistoricalValue(
-    cursorFields,
-    historicalTime,
-    position?.current,
-    position?.history?.buffer
-  );
-
-  if (!historicalPosition) {
-    return;
-  }
-  return (
-    <Cursor
-      cursorStyle={props.cursorStyle}
-      x={historicalPosition.x}
-      y={historicalPosition.y}
-    />
-  );
-}
+import {
+  FunctionReference,
+  GenericDataModel,
+  TableNamesInDataModel,
+} from "convex/server";
+import { GenericId } from "convex/values";
 
 export type Knobs = {
+  // replay
   minServerBufferAgeSoft: number;
   maxServerBufferAgeSoft: number;
   maxServerBufferAgeHard: number;
+  // record
+  minSampleDuration: number;
+  flushFrequency: number;
 };
 
-function useHistoricalTime(knobs: Knobs, currentState?: Doc<"positions">) {
-  const timeManager = useRef(new HistoricalTimeManager());
-  const rafRef = useRef<number>();
-  const [historicalTime, setHistoricalTime] = useState<number | undefined>(
-    undefined
-  );
-  if (currentState && currentState.history) {
-    const interval = {
-      startTs: currentState.history.start,
-      endTs: currentState.serverTime,
-    };
-    timeManager.current.receive(interval);
-  }
-  const updateTime = (performanceNow: number) => {
-    // We don't need sub-millisecond precision for interpolation, so just use `Date.now()`.
-    const now = Date.now();
-    setHistoricalTime(timeManager.current.historicalServerTime(now, knobs));
-    rafRef.current = requestAnimationFrame(updateTime);
+type PositionDoc = {
+  current?: { x: number; y: number };
+  serverTime: number;
+
+  history?: {
+    start: number;
+    buffer: ArrayBuffer;
   };
-  useEffect(() => {
-    rafRef.current = requestAnimationFrame(updateTime);
-    return () => cancelAnimationFrame(rafRef.current!);
-  }, []);
-  return { historicalTime, timeManager: timeManager.current };
+};
+
+export function makePositionHooks<
+  DataModel extends GenericDataModel,
+  TableName extends TableNamesInDataModel<DataModel>
+>(
+  loadPosition: FunctionReference<
+    "query",
+    "public",
+    { positionId: GenericId<TableName> },
+    // DocumentByName<DataModel, TableName>
+    PositionDoc
+  >,
+  submitPositionBatch: FunctionReference<
+    "mutation",
+    "public",
+    {
+      positionId: GenericId<TableName>;
+      batchDuration: number;
+      operations: {
+        versionNumber: number;
+        batchTime: number;
+        newPosition: {
+          x: number;
+          y: number;
+        };
+      }[];
+    },
+    GenericId<TableName>
+  >,
+  positionTableName: TableName
+) {
+  function useHistoricalTime(knobs: Knobs, currentState?: PositionDoc) {
+    const timeManager = useRef(new HistoricalTimeManager());
+    const rafRef = useRef<number>();
+    const [historicalTime, setHistoricalTime] = useState<number | undefined>(
+      undefined
+    );
+    if (currentState && currentState.history) {
+      const interval = {
+        startTs: currentState.history.start,
+        endTs: currentState.serverTime,
+      };
+      timeManager.current.receive(interval);
+    }
+    const updateTime = (performanceNow: number) => {
+      // We don't need sub-millisecond precision for interpolation, so just use `Date.now()`.
+      const now = Date.now();
+      setHistoricalTime(timeManager.current.historicalServerTime(now, knobs));
+      rafRef.current = requestAnimationFrame(updateTime);
+    };
+    useEffect(() => {
+      rafRef.current = requestAnimationFrame(updateTime);
+      return () => cancelAnimationFrame(rafRef.current!);
+    }, []);
+    return { historicalTime, timeManager: timeManager.current };
+  }
+
+  function usePositionReplay(knobs: Knobs, positionId: GenericId<TableName>) {
+    const position = useQuery(loadPosition, { positionId });
+    const { historicalTime } = useHistoricalTime(knobs, position);
+    const historicalPosition = useHistoricalValue(
+      cursorFields,
+      historicalTime,
+      position?.current,
+      position?.history?.buffer
+    );
+    return historicalPosition;
+  }
+  type Batch = {
+    start: number;
+    operations: Array<{ x: number; y: number; dt: number }>;
+  };
+  // TODO: make this configurable
+  function usePositionTracking(
+    initialPositionId: GenericId<TableName> | undefined,
+    ref: React.RefObject<HTMLElement>,
+    knobs: Knobs,
+    onUpdatePositionId?: (id: GenericId<TableName>) => any
+  ) {
+    const [positionId, setPositionId] = useState(initialPositionId);
+    const [currentPosition, setCurrentPosition] = useState<{
+      x: number;
+      y: number;
+    } | null>(null);
+
+    const batch = useRef<Batch>({ start: Date.now(), operations: [] });
+
+    const onMove = useCallback(
+      (e: MouseEvent) => {
+        const { x: parentX, y: parentY } = ref.current!.getBoundingClientRect();
+        const x = e.clientX - parentX;
+        const y = e.clientY - parentY;
+        batch.current.operations.push({
+          x,
+          y,
+          dt: Date.now() - batch.current.start,
+        });
+        setCurrentPosition({ x, y });
+      },
+      [setCurrentPosition]
+    );
+    const applyOperations = useMutation(submitPositionBatch);
+    useEffect(() => {
+      const flush = () => {
+        if (!positionId) return;
+        const now = Date.now();
+        const buffer = batch.current;
+        batch.current = { start: now, operations: [] };
+        if (buffer.operations.length === 0) {
+          return;
+        }
+        const operations = [];
+        for (const operation of buffer.operations) {
+          const last = operations[operations.length - 1];
+          if (last && operation.dt - last.batchTime < knobs.minSampleDuration) {
+            continue;
+          }
+          operations.push({
+            batchTime: operation.dt,
+            versionNumber: 1,
+            newPosition: { x: operation.x, y: operation.y },
+          });
+        }
+        const duration = now - buffer.start;
+        applyOperations({
+          batchDuration: duration,
+          operations,
+          positionId,
+        }).then((newPositionId) => {
+          if (positionId !== newPositionId) {
+            setPositionId(newPositionId);
+            onUpdatePositionId && onUpdatePositionId(newPositionId);
+          }
+        });
+      };
+      const interval = setInterval(flush, knobs.flushFrequency);
+      return () => clearInterval(interval);
+    }, [batch, knobs]);
+
+    return { onMove, currentPosition, positionId };
+  }
+
+  return { usePositionReplay, usePositionTracking };
 }
 
 type ServerTimeInterval = {
@@ -78,7 +189,7 @@ type ServerTimeInterval = {
   endTs: number;
 };
 
-export class HistoricalTimeManager {
+class HistoricalTimeManager {
   intervals: Array<ServerTimeInterval> = [];
   prevClientTs?: number;
   prevServerTs?: number;

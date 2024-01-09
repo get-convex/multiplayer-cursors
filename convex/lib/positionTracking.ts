@@ -27,10 +27,6 @@ export function makePositionTrackingServerFunctions(
   // TableName extends TableNamesInDataModel<DataModel>
   // >
   tableName: TableName
-  // onCreate: (
-  //   ctx: GenericMutationCtx<DataModel>,
-  //   positionId: GenericId<TableName>
-  // ) => any
 ) {
   const createEmptyPosition = (ctx: GenericMutationCtx<DataModel>) => {
     return ctx.db.insert(tableName, {
@@ -38,22 +34,20 @@ export function makePositionTrackingServerFunctions(
       serverTime: Date.now(),
     });
   };
+
   const submitPositionBatch = (
     mutationGeneric as MutationBuilder<DataModel, "public">
   )({
     args: {
-      positionId: v.optional(v.id(tableName)),
+      positionId: v.id(tableName),
       batchDuration: v.number(),
       operations: v.array(operation),
     },
     handler: async (ctx, args) => {
-      const existing = args.positionId && (await ctx.db.get(args.positionId));
+      const existing = await ctx.db.get(args.positionId);
       const positionId = existing
         ? existing._id
-        : await ctx.db.insert(tableName, {
-            versionNumber: 0,
-            serverTime: Date.now(),
-          });
+        : await createEmptyPosition(ctx);
       const position = existing ?? (await ctx.db.get(positionId))!;
 
       const now = Date.now();
@@ -104,6 +98,7 @@ export function makePositionTrackingServerFunctions(
     handler: async (ctx, args) => {
       const position = await ctx.db.get(args.positionId);
       if (!position) {
+        // TODO: null if we'll vacuum?
         throw new Error("Position not found");
       }
       return position;

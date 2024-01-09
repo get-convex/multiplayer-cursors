@@ -9,10 +9,10 @@
     "predev": "convex dev --until-success"
   },
   "dependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
     "convex": "1.7.1",
-    "convex-helpers": "0.1.7"
+    "convex-helpers": "^0.1.10-alpha.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "devDependencies": {
     "@types/node": "^16.11.12",

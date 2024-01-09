@@ -3,7 +3,6 @@ import { v } from "convex/values";
 import { position, serverTime } from "./types";
 
 export default defineSchema({
-  // TODO: Add metadata.
   positions: defineTable({
     versionNumber: v.number(),
     current: v.optional(position),
@@ -17,12 +16,16 @@ export default defineSchema({
     ),
   }),
 
-  sessions: defineTable({
+  cursors: defineTable({
+    positionId: v.id("positions"),
+    sessionId: v.id("sessions"),
+    zone: v.string(),
     fruit: v.string(),
     color: v.object({
       default: v.string(),
       dim: v.string(),
     }),
-    positionId: v.id("positions"),
-  }),
+  }).index("zone_sessionId", ["zone", "sessionId"]),
+
+  sessions: defineTable({}),
 });

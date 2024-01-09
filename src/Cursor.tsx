@@ -1,14 +1,26 @@
+import { Id } from "../convex/_generated/dataModel";
+import { usePositionReplay } from "./useSharedCursors";
+
+export function OtherCursor(props: {
+  cursorStyle: { color: { default: string; dim: string }; fruit: string };
+  positionId: Id<"positions">;
+}) {
+  const position = usePositionReplay(props.positionId);
+  if (position === undefined) return null;
+  return <Cursor cursorStyle={props.cursorStyle} position={position} />;
+}
+
 export function Cursor(props: {
   cursorStyle: { color: { default: string; dim: string }; fruit: string };
-  x: number;
-  y: number;
+  position: { x: number; y: number };
 }) {
   const { color } = props.cursorStyle;
+  const { x, y } = props.position;
   return (
     <div
       style={{
-        left: props.x,
-        top: props.y,
+        left: x,
+        top: y,
         width: 52,
         height: 52,
         position: "absolute",

@@ -10,7 +10,7 @@ const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL);
 ReactDOM.createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ConvexProvider client={convex}>
-      <SessionProvider storageLocation={"sessionStorage"}>
+      <SessionProvider waitForSessionId>
         <App />
       </SessionProvider>
     </ConvexProvider>

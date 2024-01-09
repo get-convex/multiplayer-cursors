@@ -16,16 +16,14 @@ import {
   customQuery,
 } from "convex-helpers/server/customFunctions";
 import { makeSessionValidator } from "convex-helpers/server/sessions";
-import { FRUITS } from "../constants";
+import { DataModel } from "../_generated/dataModel";
 
 /**
  * Creates a session and returns the id. For use with the SessionProvider on the
  * client.
  */
-export const createOrValidate = makeSessionValidator("sessions", async (ctx) =>
-  ctx.db.insert("sessions", {
-    ...FRUITS[Math.floor(Math.random() * FRUITS.length)],
-  })
+export const createOrValidate = makeSessionValidator<DataModel, "sessions">(
+  "sessions"
 );
 
 /** -----------------------------------------------------------------

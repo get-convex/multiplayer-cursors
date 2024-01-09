@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { cursorFields } from "./constants";
 import { HistoricalObject } from "./lib/historicalObject";
-import { mutationWithSession, queryWithSession } from "./lib/withSession";
+import { mutationWithSession, queryWithSession } from "./lib/sessions";
 import { batchTime, position } from "./types";
 import { query } from "./_generated/server";
 

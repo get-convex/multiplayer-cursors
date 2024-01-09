@@ -15,11 +15,18 @@ import {
   customMutation,
   customQuery,
 } from "convex-helpers/server/customFunctions";
+import { makeSessionValidator } from "convex-helpers/server/sessions";
+import { FRUITS } from "../constants";
 
-export const sessionIdValidator = { sessionId: v.id("sessions") };
-export const nullableSessionIdValidator = {
-  sessionId: v.union(v.null(), v.id("sessions")),
-};
+/**
+ * Creates a session and returns the id. For use with the SessionProvider on the
+ * client.
+ */
+export const createOrValidate = makeSessionValidator("sessions", async (ctx) =>
+  ctx.db.insert("sessions", {
+    ...FRUITS[Math.floor(Math.random() * FRUITS.length)],
+  })
+);
 
 /** -----------------------------------------------------------------
  * Function wrappers

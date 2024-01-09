@@ -113,12 +113,12 @@ export function makePositionHooks<
   };
   // TODO: make this configurable
   function usePositionTracking(
-    initialPositionId: GenericId<TableName> | undefined,
+    positionId: GenericId<TableName> | undefined,
     ref: React.RefObject<HTMLElement>,
-    knobs: Knobs,
-    onUpdatePositionId?: (id: GenericId<TableName>) => any
+    knobs: Knobs
+    // onUpdatePositionId?: (id: GenericId<TableName>) => any
   ) {
-    const [positionId, setPositionId] = useState(initialPositionId);
+    // const [positionId, setPositionId] = useState(initialPositionId);
     const [currentPosition, setCurrentPosition] = useState<{
       x: number;
       y: number;
@@ -168,10 +168,10 @@ export function makePositionHooks<
           operations,
           positionId,
         }).then((newPositionId) => {
-          if (positionId !== newPositionId) {
-            setPositionId(newPositionId);
-            onUpdatePositionId && onUpdatePositionId(newPositionId);
-          }
+          // if (positionId !== newPositionId) {
+          //   setPositionId(newPositionId);
+          //   onUpdatePositionId && onUpdatePositionId(newPositionId);
+          // }
         });
       };
       const interval = setInterval(flush, knobs.flushFrequency);

@@ -21,9 +21,6 @@ function MultiplayerCursors() {
       }}
       onMouseMove={onMove}
     >
-      {cursorStyle && currentPosition && (
-        <Cursor cursorStyle={cursorStyle} {...currentPosition} />
-      )}
       {peers.map((p) => {
         return (
           <HistoricalCursor
@@ -33,6 +30,9 @@ function MultiplayerCursors() {
           />
         );
       })}
+      {cursorStyle && currentPosition && (
+        <Cursor cursorStyle={cursorStyle} {...currentPosition} />
+      )}
     </div>
   );
 }

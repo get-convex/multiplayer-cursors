@@ -17,6 +17,7 @@ function MultiplayerCursors() {
         height: "600px",
         position: "relative",
         border: "1px solid black",
+        overflow: "hidden",
         cursor: "none",
       }}
       onMouseMove={onMove}

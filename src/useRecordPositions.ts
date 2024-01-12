@@ -1,13 +1,19 @@
 import { api } from "../convex/_generated/api";
 import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useSessionMutation } from "./useServerSession";
-import { MIN_SAMPLE_DURATION, FLUSH_FREQUENCY } from "./constants";
 
 type Batch = {
   start: number;
   operations: Array<{ x: number; y: number; dt: number }>;
 };
-export function useRecordPositions(ref: React.RefObject<HTMLElement>) {
+export type Knobs = {
+  minSampleDuration: number;
+  flushFrequency: number;
+};
+export function useRecordPositions(
+  ref: React.RefObject<HTMLElement>,
+  knobs: Knobs
+) {
   const [currentPosition, setCurrentPosition] = useState<{
     x: number;
     y: number;
@@ -42,7 +48,7 @@ export function useRecordPositions(ref: React.RefObject<HTMLElement>) {
       const operations = [];
       for (const operation of buffer.operations) {
         const last = operations[operations.length - 1];
-        if (last && operation.dt - last.batchTime < MIN_SAMPLE_DURATION) {
+        if (last && operation.dt - last.batchTime < knobs.minSampleDuration) {
           continue;
         }
         operations.push({
@@ -54,7 +60,7 @@ export function useRecordPositions(ref: React.RefObject<HTMLElement>) {
       const duration = now - buffer.start;
       applyOperations({ batchDuration: duration, operations });
     };
-    const interval = setInterval(flush, FLUSH_FREQUENCY);
+    const interval = setInterval(flush, knobs.flushFrequency);
     return () => clearInterval(interval);
   }, [batch]);
 

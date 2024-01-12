@@ -1,5 +1,5 @@
 import { api } from "../convex/_generated/api";
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { SessionContext, useSessionQuery } from "./useServerSession";
 import { Cursor } from "./Cursor";
 import { useRecordPositions } from "./useRecordPositions";
@@ -7,11 +7,18 @@ import { HistoricalCursor } from "./HistoricalCursor";
 
 function MultiplayerCursors() {
   const cursorStyle = useSessionQuery(api.cursors.cursorStyle);
-  const { onMove, currentPosition } = useRecordPositions();
   const peers = useSessionQuery(api.sessions.peerSessions) ?? [];
+  const ref = useRef<HTMLDivElement>(null);
+  const { onMove, currentPosition } = useRecordPositions(ref);
   return (
     <div
-      style={{ height: "600px", border: "1px solid black", cursor: "none" }}
+      ref={ref}
+      style={{
+        height: "600px",
+        position: "relative",
+        border: "1px solid black",
+        cursor: "none",
+      }}
       onMouseMove={onMove}
     >
       {cursorStyle && currentPosition && (

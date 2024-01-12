@@ -7,7 +7,7 @@ type Batch = {
   start: number;
   operations: Array<{ x: number; y: number; dt: number }>;
 };
-export function useRecordPositions() {
+export function useRecordPositions(ref: React.RefObject<HTMLElement>) {
   const [currentPosition, setCurrentPosition] = useState<{
     x: number;
     y: number;
@@ -17,12 +17,15 @@ export function useRecordPositions() {
 
   const onMove = useCallback(
     (e: MouseEvent) => {
+      const { x: parentX, y: parentY } = ref.current!.getBoundingClientRect();
+      const x = e.clientX - parentX;
+      const y = e.clientY - parentY;
       batch.current.operations.push({
-        x: e.clientX,
-        y: e.clientY,
+        x,
+        y,
         dt: Date.now() - batch.current.start,
       });
-      setCurrentPosition({ x: e.clientX, y: e.clientY });
+      setCurrentPosition({ x, y });
     },
     [setCurrentPosition]
   );

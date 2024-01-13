@@ -23,36 +23,18 @@ function MultiplayerCursors() {
   const cursorStyle = useSessionQuery(api.cursors.cursorStyle);
   const peers = useSessionQuery(api.sessions.peerSessions) ?? [];
   const ref = useRef<HTMLDivElement>(null);
-  const [minServerBufferAgeSoft, MinSoftSlider] = useSlider(
-    "Server buffer age min (soft)",
-    SOFT_MIN_SERVER_BUFFER_AGE,
-    0,
-    500
+  const [minServerBufferAgeSoft, minServerBufferAgeSoftOnChange] = useSlider(
+    SOFT_MIN_SERVER_BUFFER_AGE
   );
-  const [maxServerBufferAgeSoft, MaxSoftSlider] = useSlider(
-    "Server buffer age max (soft)",
-    SOFT_MAX_SERVER_BUFFER_AGE,
-    0,
-    2000
+  const [maxServerBufferAgeSoft, maxServerBufferAgeSoftOnChange] = useSlider(
+    SOFT_MAX_SERVER_BUFFER_AGE
   );
-  const [maxServerBufferAgeHard, MaxHardSlider] = useSlider(
-    "Server buffer age max (hard)",
-    MAX_SERVER_BUFFER_AGE,
-    0,
-    2000
+  const [maxServerBufferAgeHard, maxServerBufferAgeHardOnChange] = useSlider(
+    MAX_SERVER_BUFFER_AGE
   );
-  const [minSampleDuration, MinSampleSlider] = useSlider(
-    "Min sample duration",
-    MIN_SAMPLE_DURATION,
-    0,
-    16
-  );
-  const [flushFrequency, FlushFreqSlider] = useSlider(
-    "Flush period",
-    FLUSH_FREQUENCY,
-    0,
-    2000
-  );
+  const [minSampleDuration, minSampleDurationOnChange] =
+    useSlider(MIN_SAMPLE_DURATION);
+  const [flushFrequency, flushFrequencyOnChange] = useSlider(FLUSH_FREQUENCY);
   const knobs = useMemo(
     () => ({
       minServerBufferAgeSoft,
@@ -97,11 +79,46 @@ function MultiplayerCursors() {
           <Cursor cursorStyle={cursorStyle} {...currentPosition} />
         )}
       </div>
-      {MinSoftSlider}
-      {MaxSoftSlider}
-      {MaxHardSlider}
-      {MinSampleSlider}
-      {FlushFreqSlider}
+      <Slider
+        value={minServerBufferAgeSoft}
+        name={"Server buffer age min (soft)"}
+        min={0}
+        max={500}
+        onChange={minServerBufferAgeSoftOnChange}
+        key={"Server buffer age min (soft)"}
+      />
+      <Slider
+        value={maxServerBufferAgeSoft}
+        name={"Server buffer age max (soft)"}
+        min={0}
+        max={2000}
+        onChange={maxServerBufferAgeSoftOnChange}
+        key={"Server buffer age max (soft)"}
+      />
+      <Slider
+        value={maxServerBufferAgeHard}
+        name={"Server buffer age max (hard)"}
+        min={0}
+        max={2000}
+        onChange={maxServerBufferAgeHardOnChange}
+        key={"Server buffer age max (hard)"}
+      />
+      <Slider
+        value={minSampleDuration}
+        name={"Min sample duration"}
+        min={0}
+        max={16}
+        onChange={minSampleDurationOnChange}
+        key={"Min sample duration"}
+      />
+      <Slider
+        value={flushFrequency}
+        name={"Flush period"}
+        min={0}
+        max={2000}
+        onChange={flushFrequencyOnChange}
+        key={"Flush period"}
+      />
     </>
   );
 }
@@ -116,7 +133,7 @@ export default function App() {
   );
 }
 
-function useSlider(name: string, initial: number, min: number, max: number) {
+function useSlider(initial: number) {
   const [value, setValue] = useState(initial);
 
   const handleChange = useCallback(
@@ -125,24 +142,26 @@ function useSlider(name: string, initial: number, min: number, max: number) {
     },
     [setValue]
   );
+  return [value, handleChange] as const;
+}
 
-  return [
-    value,
+function Slider(props: {
+  name: string;
+  value: number;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  min: number;
+  max: number;
+}) {
+  return (
     <div
       style={{
         display: "flex",
       }}
     >
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={handleChange}
-      />
+      <input type="range" {...props} />
       <p>
-        {name}: {value}
+        {props.name}: {props.value}
       </p>
-    </div>,
-  ] as const;
+    </div>
+  );
 }

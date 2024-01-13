@@ -62,7 +62,7 @@ export function useRecordPositions(
     };
     const interval = setInterval(flush, knobs.flushFrequency);
     return () => clearInterval(interval);
-  }, [batch]);
+  }, [batch, knobs]);
 
   return { onMove, currentPosition };
 }

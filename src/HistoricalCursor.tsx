@@ -1,10 +1,5 @@
 import { Cursor } from "./Cursor";
 import { Doc, Id } from "../convex/_generated/dataModel";
-import {
-  SOFT_MIN_SERVER_BUFFER_AGE,
-  SOFT_MAX_SERVER_BUFFER_AGE,
-  MAX_SERVER_BUFFER_AGE,
-} from "./constants";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
@@ -18,11 +13,15 @@ import { cursorFields } from "../convex/constants";
 export function HistoricalCursor(props: {
   cursorStyle: { color: { default: string; dim: string }; fruit: string };
   positionId: Id<"positions">;
+  knobs: Knobs;
 }) {
   const position = useQuery(api.cursors.loadPosition, {
     positionId: props.positionId,
   });
-  const { historicalTime, timeManager } = useHistoricalTime(position);
+  const { historicalTime, timeManager } = useHistoricalTime(
+    props.knobs,
+    position
+  );
   const historicalPosition = useHistoricalValue(
     cursorFields,
     historicalTime,
@@ -42,7 +41,13 @@ export function HistoricalCursor(props: {
   );
 }
 
-function useHistoricalTime(currentState?: Doc<"positions">) {
+export type Knobs = {
+  minServerBufferAgeSoft: number;
+  maxServerBufferAgeSoft: number;
+  maxServerBufferAgeHard: number;
+};
+
+function useHistoricalTime(knobs: Knobs, currentState?: Doc<"positions">) {
   const timeManager = useRef(new HistoricalTimeManager());
   const rafRef = useRef<number>();
   const [historicalTime, setHistoricalTime] = useState<number | undefined>(
@@ -58,7 +63,7 @@ function useHistoricalTime(currentState?: Doc<"positions">) {
   const updateTime = (performanceNow: number) => {
     // We don't need sub-millisecond precision for interpolation, so just use `Date.now()`.
     const now = Date.now();
-    setHistoricalTime(timeManager.current.historicalServerTime(now));
+    setHistoricalTime(timeManager.current.historicalServerTime(now, knobs));
     rafRef.current = requestAnimationFrame(updateTime);
   };
   useEffect(() => {
@@ -93,7 +98,7 @@ export class HistoricalTimeManager {
     this.totalDuration += interval.endTs - interval.startTs;
   }
 
-  historicalServerTime(clientNow: number): number | undefined {
+  historicalServerTime(clientNow: number, knobs: Knobs): number | undefined {
     if (this.intervals.length == 0) {
       return undefined;
     }
@@ -110,15 +115,15 @@ export class HistoricalTimeManager {
     // would be to continuously adjust the rate based on the size of the buffer.
     const bufferDuration = lastServerTs - prevServerTs;
     let rate = 1;
-    if (bufferDuration < SOFT_MIN_SERVER_BUFFER_AGE) {
+    if (bufferDuration < knobs.minServerBufferAgeSoft) {
       rate = 0.8;
-    } else if (bufferDuration > SOFT_MAX_SERVER_BUFFER_AGE) {
+    } else if (bufferDuration > knobs.maxServerBufferAgeSoft) {
       rate = 1.2;
     }
     let serverTs = Math.max(
       prevServerTs + (clientNow - prevClientTs) * rate,
       // Jump forward if we're too far behind.
-      lastServerTs - MAX_SERVER_BUFFER_AGE
+      lastServerTs - knobs.maxServerBufferAgeHard
     );
 
     let chosen = null;

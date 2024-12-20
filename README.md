@@ -2,7 +2,7 @@
 
 This repo has an adaptation of our position encoding from AI town for multiplayer cursors.
 
-The implementation has the following properties (I think...):
+The implementation has the following properties:
 - Roughly 1 mutation/sec per active client. We can increase this frequency to target ~500ms lag, since we can assume here that most cursors are idle.
 - One player moving a cursor should only invalidate 1 query which is then shared by all other peers.
 - When everyone's idle the system is idle.
